@@ -61,7 +61,7 @@ def bruteforce_policies():
     terms = terminals()
     optimalpolicies = []
 
-    policy = np.zeros(n_states, dtype=np.int)  # in the discrete case a policy is just an array with action = policy[state]
+    policy = np.zeros(n_states, dtype=np.int64)  # in the discrete case a policy is just an array with action = policy[state]
     optimalvalue = np.zeros(n_states)
     
     # TODO: implement code that tries all possible policies, calculates the values using def value_policy().
@@ -98,8 +98,8 @@ def main():
     print("")
 
     # Here a policy is just an array with the action for a state as element
-    policy_left = np.zeros(n_states, dtype=np.int)  # 0 for all states
-    policy_right = np.ones(n_states, dtype=np.int) * 2  # 2 for all states
+    policy_left = np.zeros(n_states, dtype=np.int64)  # 0 for all states
+    policy_right = np.ones(n_states, dtype=np.int64) * 2  # 2 for all states
 
     # Value functions:
     print("Value function for policy_left (always going left):")
