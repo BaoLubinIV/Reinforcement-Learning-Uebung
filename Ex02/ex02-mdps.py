@@ -1,4 +1,4 @@
-import gymnasium as gym
+import gym
 import numpy as np
 
 # Init environment
@@ -75,11 +75,11 @@ def bruteforce_policies():
                 #try all actions
                 
                 v = value_policy(policy)
-                if np.all(v >= optimalvalue):
-                    if np.any(v > optimalvalue):
-                        optimalpolicies = []
+                if np.any(v > optimalvalue):
+                    optimalpolicies = [policy.copy()] 
+                    optimalvalue = v
+                elif np.all(v == optimalvalue):
                     optimalpolicies.append(policy.copy())
-                    optimalvalue = v.copy()
 
     print("Optimal value function:")
     print(optimalvalue)
@@ -111,7 +111,7 @@ def main():
 
 
     # This code can be used to "rollout" a policy in the environment:
-    """
+
     print("rollout policy:")
     maxiter = 100
     state = env.reset()
@@ -121,8 +121,9 @@ def main():
         state=new_state
         if done:
             print("Finished episode")
-            break"""
-
+            break
+        
 
 if __name__ == "__main__":
     main()
+
