@@ -1,36 +1,33 @@
-import gym
+import gymnasium as gym
 import numpy as np
 
 # Init environment
 # Lets use a smaller 3x3 custom map for faster computations
 custom_map3x3 = [
-    "SFF",
-    "FFF",
-    "FHG",
+    'SFF',
+    'FFF',
+    'FHG',
 ]
-env = gym.make("FrozenLake-v0", desc=custom_map3x3)
+env = gym.make("FrozenLake-v1", desc=custom_map3x3)
+
 # TODO: Uncomment the following line to try the default map (4x4):
-# env = gym.make("FrozenLake-v0")
+#env = gym.make("FrozenLake-v0")
 
 # Uncomment the following lines for even larger maps:
-# random_map = generate_random_map(size=5, p=0.8)
-# env = gym.make("FrozenLake-v0", desc=random_map)
+#random_map = generate_random_map(size=5, p=0.8)
+#env = gym.make("FrozenLake-v0", desc=random_map)
 
 # Init some useful variables:
 n_states = env.observation_space.n
 n_actions = env.action_space.n
 
-r = np.zeros(
-    n_states
-)  # the r vector is zero everywhere except for the goal state (last state)
-r[-1] = 1.0
+r = np.zeros(n_states) # the r vector is zero everywhere except for the goal state (last state)
+r[-1] = 1.
 
 gamma = 0.8
 
 
 """ This is a helper function that returns the transition probability matrix P for a policy """
-
-
 def trans_matrix_for_policy(policy):
     transitions = np.zeros((n_states, n_states))
     for s in range(n_states):
@@ -41,8 +38,6 @@ def trans_matrix_for_policy(policy):
 
 
 """ This is a helper function that returns terminal states """
-
-
 def terminals():
     terms = []
     for s in range(n_states):
@@ -56,7 +51,9 @@ def value_policy(policy):
     P = trans_matrix_for_policy(policy)
     # TODO: calculate and return v
     # (P, r and gamma already given)
-    v = None
+    
+    E = np.eye(n_states)
+    v = np.dot(np.linalg.inv(E-gamma*P),r)
     return v
 
 
@@ -64,13 +61,25 @@ def bruteforce_policies():
     terms = terminals()
     optimalpolicies = []
 
-    policy = np.zeros(
-        n_states, dtype=np.int64
-    )  # in the discrete case a policy is just an array with action = policy[state]
+    policy = np.zeros(n_states, dtype=np.int)  # in the discrete case a policy is just an array with action = policy[state]
     optimalvalue = np.zeros(n_states)
-
+    
     # TODO: implement code that tries all possible policies, calculates the values using def value_policy().
     #       Find the optimal values and the optimal policies to answer the exercise questions.
+    for s in range(n_states):
+        if s not in terms:
+        #for all states
+        
+            for a in range(n_actions):
+                policy[s] = a
+                #try all actions
+                
+                v = value_policy(policy)
+                if np.all(v >= optimalvalue):
+                    if np.any(v > optimalvalue):
+                        optimalpolicies = []
+                    optimalpolicies.append(policy.copy())
+                    optimalvalue = v.copy()
 
     print("Optimal value function:")
     print(optimalvalue)
@@ -83,13 +92,14 @@ def bruteforce_policies():
 
 def main():
     # print the environment
+    env.reset()
     print("current environment: ")
     env.render()
     print("")
 
     # Here a policy is just an array with the action for a state as element
-    policy_left = np.zeros(n_states, dtype=np.int64)  # 0 for all states
-    policy_right = np.ones(n_states, dtype=np.int64) * 2  # 2 for all states
+    policy_left = np.zeros(n_states, dtype=np.int)  # 0 for all states
+    policy_right = np.ones(n_states, dtype=np.int) * 2  # 2 for all states
 
     # Value functions:
     print("Value function for policy_left (always going left):")
@@ -98,6 +108,7 @@ def main():
     print(value_policy(policy_right))
 
     optimalpolicies = bruteforce_policies()
+
 
     # This code can be used to "rollout" a policy in the environment:
     """
