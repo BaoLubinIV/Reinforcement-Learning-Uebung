@@ -65,21 +65,23 @@ def bruteforce_policies():
     optimalvalue = np.zeros(n_states)
     
     # TODO: implement code that tries all possible policies, calculates the values using def value_policy().
-    #       Find the optimal values and the optimal policies to answer the exercise questions.
     for s in range(n_states):
         if s not in terms:
-        #for all states
+        #for all states that is not in terms
         
             for a in range(n_actions):
                 policy[s] = a
                 #try all actions
                 
                 v = value_policy(policy)
-                if np.any(v > optimalvalue):
-                    optimalpolicies = [policy.copy()] 
+                
+                #Find the optimal values and the optimal policies to answer the exercise questions.             
+                if np.sum(v) > np.sum(optimalvalue):
                     optimalvalue = v
-                elif np.all(v == optimalvalue):
-                    optimalpolicies.append(policy.copy())
+                    optimalpolicies = []
+                    optimalpolicies.append(policy)
+                elif np.sum(v) == np.sum(optimalvalue):
+                    optimalpolicies.append(policy)
 
     print("Optimal value function:")
     print(optimalvalue)
