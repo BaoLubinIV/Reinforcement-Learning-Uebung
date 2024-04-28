@@ -92,6 +92,8 @@ def bruteforce_policies():
         elif current_value == optimal_value:
             optimal_policies.append(policy.copy())
 
+    # both value functions should have similar structures in this env, just show first
+    print("Optimal value function (first):", value_policy(optimal_policies[0]))
     print("Optimal value function total:", optimal_value)
     print("Number of optimal policies:", len(optimal_policies))
     print("Optimal policies:")
