@@ -13,7 +13,7 @@ custom_map3x3 = [
 env = gym.make("FrozenLake-v0", desc=custom_map3x3)
 
 # TODO: Uncomment the following line to try the default map (4x4):
-# env = gym.make("FrozenLake-v1")
+# env = gym.make("FrozenLake-v0")
 
 # Uncomment the following lines for even larger maps:
 # random_map = generate_random_map(size=5, p=0.8)
@@ -125,7 +125,6 @@ def main():
     print("rollout policy:")
     maxiter = 100
     state = env.reset()
-    print(state)
     for i in range(maxiter):
         new_state, reward, done, info = env.step(optimalpolicies[0][state])
         env.render()
