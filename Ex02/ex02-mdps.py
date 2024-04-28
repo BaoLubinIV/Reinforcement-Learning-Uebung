@@ -1,33 +1,38 @@
 import gym
 import numpy as np
+from itertools import product
+
 print(gym.__version__)
 # Init environment
 # Lets use a smaller 3x3 custom map for faster computations
 custom_map3x3 = [
-    'SFF',
-    'FFF',
-    'FHG',
+    "SFF",
+    "FFF",
+    "FHG",
 ]
-env = gym.make("FrozenLake-v1", desc=custom_map3x3)
+env = gym.make("FrozenLake-v0", desc=custom_map3x3)
 
 # TODO: Uncomment the following line to try the default map (4x4):
-#env = gym.make("FrozenLake-v1")
+# env = gym.make("FrozenLake-v1")
 
 # Uncomment the following lines for even larger maps:
-#random_map = generate_random_map(size=5, p=0.8)
-#env = gym.make("FrozenLake-v0", desc=random_map)
+# random_map = generate_random_map(size=5, p=0.8)
+# env = gym.make("FrozenLake-v0", desc=random_map)
 
 # Init some useful variables:
 n_states = env.observation_space.n
 n_actions = env.action_space.n
 
-r = np.zeros(n_states) # the r vector is zero everywhere except for the goal state (last state)
-r[-1] = 1.
+r = np.zeros(n_states)
+# the r vector is zero everywhere except for the goal state (last state)
+r[-1] = 1.0
 
 gamma = 0.8
 
 
 """ This is a helper function that returns the transition probability matrix P for a policy """
+
+
 def trans_matrix_for_policy(policy):
     transitions = np.zeros((n_states, n_states))
     for s in range(n_states):
@@ -38,6 +43,8 @@ def trans_matrix_for_policy(policy):
 
 
 """ This is a helper function that returns terminal states """
+
+
 def terminals():
     terms = []
     for s in range(n_states):
@@ -51,66 +58,47 @@ def value_policy(policy):
     P = trans_matrix_for_policy(policy)
     # TODO: calculate and return v
     # (P, r and gamma already given)
-    
+
     E = np.eye(n_states)
-    v = np.dot(np.linalg.inv(E-gamma*P),r)
+    v = np.dot(np.linalg.inv(E - gamma * P), r)
     return v
 
-#function to generate all the policies
-def decimal_to_base4(decimal):
-    if decimal == 0:
-        return '0'
-    
-    result = ''
-    while decimal > 0:
-        remainder = decimal % 4
-        result = str(remainder) + result
-        decimal //= 4
-    
-    return result
 
 def bruteforce_policies():
-    terms = terminals()
-    print(terms)
-    optimalpolicies = []
+    optimal_policies = []
+    optimal_value = None
 
-    policy = np.zeros(n_states, dtype=np.int64)  # in the discrete case a policy is just an array with action = policy[state]
-    optimalvalue = np.zeros(n_states)
-    n_non_term_s = n_states-len(terms)
-    # TODO: implement code that tries all possible policies, calculates the values using def value_policy().
-    for i in range(0, 4**n_non_term_s):      
-        generator = decimal_to_base4(i).zfill(n_non_term_s)        #generate all policies
-        
-        index = 0
-        policy = np.zeros(n_states, dtype=np.int64)
-        for s in range (n_states):
-            if s not in terms:
-            #all states besides terms
-                policy[s]=generator[index] 
-                index += 1
-            else:
-                policy[s]=0
-        print("Policy:",policy)
-        
+    # Set 0 action for terminal states
+    term_states = terminals()
+    action_options = [
+        range(n_actions) if i not in term_states else [0] for i in range(n_states)
+    ]
+
+    # each policy is a tuple where indices represent states and values represent the chosen action
+    # cartesian product of n_actions repeated n_states times
+    all_policies = product(*action_options)
+
+    for policy_tuple in all_policies:
+        policy = np.array(policy_tuple, dtype=int)
         v = value_policy(policy)
-        print("Value",v)
-        
-        #Find the optimal values and the optimal policies to answer the exercise questions.             
-        if np.sum(v) > np.sum(optimalvalue):
-            optimalvalue = v
-            optimalpolicies = []
-            optimalpolicies.append(policy)
-        elif np.sum(v) == np.sum(optimalvalue):
-            optimalpolicies.append(policy)
-                
 
-    print("Optimal value function:")
-    print(optimalvalue)
-    print("number optimal policies:")
-    print(len(optimalpolicies))
-    print("optimal policies:")
-    print(np.array(optimalpolicies))
-    return optimalpolicies
+        # calc value of policy
+        current_value = np.sum(v)
+
+        # update optimal value and policies
+        if optimal_value is None or current_value > optimal_value:
+            optimal_value = current_value
+            optimal_policies = [policy.copy()]
+        elif current_value == optimal_value:
+            optimal_policies.append(policy.copy())
+
+    print("Optimal value function total:", optimal_value)
+    print("Number of optimal policies:", len(optimal_policies))
+    print("Optimal policies:")
+    for p in optimal_policies:
+        print(p)
+
+    return optimal_policies
 
 
 def main():
@@ -132,9 +120,8 @@ def main():
 
     optimalpolicies = bruteforce_policies()
 
-
     # This code can be used to "rollout" a policy in the environment:
-'''
+
     print("rollout policy:")
     maxiter = 100
     state = env.reset()
@@ -142,12 +129,11 @@ def main():
     for i in range(maxiter):
         new_state, reward, done, info = env.step(optimalpolicies[0][state])
         env.render()
-        state=new_state
+        state = new_state
         if done:
             print("Finished episode")
             break
-   '''     
+
 
 if __name__ == "__main__":
     main()
-
