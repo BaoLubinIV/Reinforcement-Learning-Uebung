@@ -44,8 +44,9 @@ def print_policy(policy, env):
 
 def value_iteration():
     V_states = np.zeros(n_states)  # init values as zero
-    theta = 1e-8
+    theta = 1e-08
     gamma = 0.8
+
     # TODO: implement the value iteration algorithm
     # Hint: env.P[state][action] gives you tuples (p, n_state, r, is_terminal), which tell you the probability p that you end up in the next state n_state and receive reward r
 
@@ -74,7 +75,7 @@ def value_iteration():
             delta = max(delta, abs(v - V_states[s]))
 
         iters += 1
-        if delta < theta:
+        if delta <= theta:
             break
 
     print(
@@ -85,6 +86,9 @@ def value_iteration():
         "and gamma =",
         gamma,
     )
+
+    print("Value function V(s):")
+    print(V_states.reshape(env.desc.shape))
 
     return policy
 
@@ -104,16 +108,16 @@ def main():
     print_policy(policy, env)
 
     # This code can be used to "rollout" a policy in the environment:
-    """print ("rollout policy:")
-    maxiter = 100
-    state = env.reset()
-    for i in range(maxiter):
-        new_state, reward, done, info = env.step(policy[state])
-        env.render()
-        state=new_state
-        if done:
-            print("Finished episode")
-            break"""
+    # print("rollout policy:")
+    # maxiter = 100
+    # state = env.reset()
+    # for i in range(maxiter):
+    #     new_state, reward, done, info = env.step(policy[state])
+    #     env.render()
+    #     state = new_state
+    #     if done:
+    #         print("Finished episode")
+    #         break
 
 
 if __name__ == "__main__":
