@@ -37,11 +37,11 @@ def policy_evaluation():
     returns = np.zeros((10, 10, 2))
     visits = np.zeros((10, 10, 2))
     maxiter = 10000  # use whatever number of iterations you want
-    for _ in range(maxiter):
+    for i in range(maxiter):
         E_states, E_ret = single_run_20()
         first_visit = np.zeros((10, 10, 2))
         
-        for i,state in enumerate(E_states):
+        for state in E_states:
             player_sum, dealer_card, useable_ace = state
             
             if first_visit[player_sum - 12, dealer_card - 1, int(useable_ace)] == 0: 
@@ -87,7 +87,30 @@ def plot_value_function(V):
     plt.tight_layout()
     plt.show()
 
+def single_run_es(pi)
+    '''function to run an episode '''
+    obs = env.reset()  # obs is a tuple: (player_sum, dealer_card, useable_ace)
+    done = False
+    states = []
+    actions = []
+    ret = 0.
+    while not done:
+        states.append(obs)
+        
+        #search for action accrording to current policy
+        player_sum, dealer_card, useable_ace = obs
+        action = pi[player_sum - 12, dealer_card - 1, int(useable_ace)]
+        actions.append(action)
+        
+        #take the action
+        obs, reward, done, _ = env.step(action)
+        
+        ret += reward  # Note that gamma = 1. in this exercise
+                       # reward is only given at very end of an episode
 
+    return states, actions, ret
+    
+    
 def monte_carlo_es():
     """ Implementation of Monte Carlo ES """
     # suggested dimensionality: player_sum (12-21), dealer card (1-10), useable ace (true/false)
@@ -103,12 +126,45 @@ def monte_carlo_es():
             print("Iteration: " + str(i))
             print(pi[:, :, 0])
             print(pi[:, :, 1])
+        
+        #run an episode
+        E_states, E_actions, E_ret = single_run_es(pi)
+        
+        #first visit check for each state-action pair
+        first_visit = np.ones((10, 10, 2, 2))
+        
+        for step in range(len(E_states))
+            state = E_states[step]
+            action = E_action[step]
+            player_sum, dealer_card, useable_ace = state
+            
+            #check first visit
+            if first_visit[player_sum - 12, dealer_card - 1, int(useable_ace), action] == 0:
+                returns[player_sum - 12, dealer_card - 1, int(useable_ace), action] += E_ret
+                visits[player_sum - 12, dealer_card - 1, int(useable_ace), action] += 1
+                first_visit[player_sum - 12, dealer_card - 1, int(useable_ace), action] == 1
+                
+        
+        #update Q after an episode
+        Q = np.divide(returns, visits, out=0, where=visits != 0)
+        
+        #update policy pi based on Q, always take greedy choice
+        for player_sum in range(12, 22):
+            for dealer_card in range(1, 11):
+                for useable_ace in range(2):
+                    pi[player_sum - 12, dealer_card - 1, useable_ace] = np.argmax(
+                            Q[player_sum - 12, dealer_card - 1, useable_ace, :])
+        
 
 
 def main():
     single_run_20()
-    # policy_evaluation()
+    
+    # policy_evaluation() 
+    # call policy_evaluation function to evaluate the policy that sticks for >= 20
+    
     # monte_carlo_es()
+    # call monte_carlo_es function to learn optimal policy
 
 
 if __name__ == "__main__":
