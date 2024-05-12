@@ -88,7 +88,7 @@ def plot_value_function(V):
     plt.show()
 
 def single_run_es(pi)
-    '''function to run an episode '''
+    '''function to run an episode with policy pi'''
     obs = env.reset()  # obs is a tuple: (player_sum, dealer_card, useable_ace)
     done = False
     states = []
