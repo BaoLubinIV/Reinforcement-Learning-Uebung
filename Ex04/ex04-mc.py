@@ -36,86 +36,72 @@ def policy_evaluation():
     V = np.zeros((10, 10, 2))
     returns = np.zeros((10, 10, 2))
     visits = np.zeros((10, 10, 2))
-    maxiter = 10000  # use whatever number of iterations you want
+    maxiter = 50000  # use whatever number of iterations you want
     for i in range(maxiter):
-        E_states, E_ret = single_run_20()
-        first_visit = np.zeros((10, 10, 2))
-        
-        for state in E_states:
-            player_sum, dealer_card, useable_ace = state
-            
-            if first_visit[player_sum - 12, dealer_card - 1, int(useable_ace)] == 0: 
-                #state not visited before, first visit!
-                #update returns for this state 
-                returns[player_sum - 12, dealer_card - 1, int(useable_ace)] += E_ret
-                visits[player_sum - 12, dealer_card - 1, int(useable_ace)] += 1
-                
-                #state set as visited in this episode
-                first_visit[player_sum - 12, dealer_card - 1, int(useable_ace)] = 1
-                
-                
-    V = np.divide(returns, visits, out=0, where=visits != 0)
+        states, ret = single_run_20()
+        G=ret
+        for t in range(len(states)):
+            if states[-(t+1)] not in states[:-(t+2)]:
+                returns[states[-(t+1)][0]-12, states[-(t+1)][1]-1, int(states[-(t+1)][2])] += G
+                visits[states[-(t+1)][0]-12, states[-(t+1)][1]-1, int(states[-(t+1)][2])] += 1
+                V[states[-(t+1)][0]-12, states[-(t+1)][1]-1, int(states[-(t+1)][2])] = returns[states[-(t+1)][0]-12, states[-(t+1)][1]-1, int(states[-(t+1)][2])] / visits[states[-(t+1)][0]-12, states[-(t+1)][1]-1, int(states[-(t+1)][2])]
     
-def plot_value_function(V):
-    '''this is a helper function to plot the V as a result'''
-    player_sums = np.arange(12, 22)
-    dealer_cards = np.arange(1, 11)
+    # print(V)
+    fig = plt.figure()
 
-    # Plot with Usable Ace
-    plt.figure(figsize=(8, 6))
-    plt.imshow(V[:, :, 1], origin='lower', cmap='viridis', extent=[1, 10, 12, 21])
-    plt.xticks(dealer_cards)
-    plt.yticks(player_sums)
-    plt.xlabel('Dealer Card')
-    plt.ylabel('Player Sum')
-    plt.title('Value Function with Usable Ace')
-    cbar = plt.colorbar()
-    cbar.set_label('State Value')
-    plt.tight_layout()
+    # Plot value function with useable ace
+    ax1 = fig.add_subplot(121, projection='3d')
+    y = np.arange(12, 22)
+    x = np.arange(1, 11)
+    x, y = np.meshgrid(x, y)
+    ax1.plot_surface(x, y, V[:, :, 1], rstride=1, cstride=1, cmap='viridis', edgecolor='none')
+    ax1.set_title('Value function with useable ace')
+
+    # Plot value function without useable ace
+    ax2 = fig.add_subplot(122, projection='3d')
+    y = np.arange(12, 22)
+    x = np.arange(1, 11)
+    x, y = np.meshgrid(x, y)
+    ax2.plot_surface(x, y, V[:, :, 0], rstride=1, cstride=1, cmap='viridis', edgecolor='none')
+    ax2.set_title('Value function without useable ace')
+
     plt.show()
+                
+def single_run_es(pi):
 
-    # Plot without Usable Ace
-    plt.figure(figsize=(8, 6))
-    plt.imshow(V[:, :, 0], origin='lower', cmap='viridis', extent=[1, 10, 12, 21])
-    plt.xticks(dealer_cards)
-    plt.yticks(player_sums)
-    plt.xlabel('Dealer Card')
-    plt.ylabel('Player Sum')
-    plt.title('Value Function without Usable Ace')
-    cbar = plt.colorbar()
-    cbar.set_label('State Value')
-    plt.tight_layout()
-    plt.show()
-
-def single_run_es(pi)
-    '''function to run an episode with policy pi'''
     obs = env.reset()  # obs is a tuple: (player_sum, dealer_card, useable_ace)
     done = False
     states = []
     actions = []
     ret = 0.
+    states.append(obs)
+    # hit or stick with equal probability in the first step
+    p = np.random.rand()
+    if p < 0.5:
+        obs, reward, done, _ = env.step(0)
+        actions.append(0)  # step=0 for stick
+    else:
+        obs, reward, done, _ = env.step(1)  # step=1 for hit
+        actions.append(1)
+    ret += reward  # Note that gamma = 1. in this exercise
     while not done:
         states.append(obs)
-        
         #search for action accrording to current policy
         player_sum, dealer_card, useable_ace = obs
         action = pi[player_sum - 12, dealer_card - 1, int(useable_ace)]
         actions.append(action)
-        
         #take the action
         obs, reward, done, _ = env.step(action)
-        
         ret += reward  # Note that gamma = 1. in this exercise
                        # reward is only given at very end of an episode
 
     return states, actions, ret
-    
-    
+
 def monte_carlo_es():
     """ Implementation of Monte Carlo ES """
     # suggested dimensionality: player_sum (12-21), dealer card (1-10), useable ace (true/false)
     # possible variables to use:
-    pi = np.zeros((10, 10, 2))
+    pi = np.zeros((10, 10, 2), dtype=int)
     # Q = np.zeros((10, 10, 2, 2))
     Q = np.ones((10, 10, 2, 2)) * 100  # recommended: optimistic initialization of Q
     returns = np.zeros((10, 10, 2, 2))
@@ -126,45 +112,21 @@ def monte_carlo_es():
             print("Iteration: " + str(i))
             print(pi[:, :, 0])
             print(pi[:, :, 1])
-        
-        #run an episode
-        E_states, E_actions, E_ret = single_run_es(pi)
-        
-        #first visit check for each state-action pair
-        first_visit = np.ones((10, 10, 2, 2))
-        
-        for step in range(len(E_states))
-            state = E_states[step]
-            action = E_action[step]
-            player_sum, dealer_card, useable_ace = state
-            
-            #check first visit
-            if first_visit[player_sum - 12, dealer_card - 1, int(useable_ace), action] == 0:
-                returns[player_sum - 12, dealer_card - 1, int(useable_ace), action] += E_ret
-                visits[player_sum - 12, dealer_card - 1, int(useable_ace), action] += 1
-                first_visit[player_sum - 12, dealer_card - 1, int(useable_ace), action] == 1
-                
-        
-        #update Q after an episode
-        Q = np.divide(returns, visits, out=0, where=visits != 0)
-        
-        #update policy pi based on Q, always take greedy choice
-        for player_sum in range(12, 22):
-            for dealer_card in range(1, 11):
-                for useable_ace in range(2):
-                    pi[player_sum - 12, dealer_card - 1, useable_ace] = np.argmax(
-                            Q[player_sum - 12, dealer_card - 1, useable_ace, :])
+        states, actions, ret = single_run_es(pi)
+        G=ret
+        for t in range(len(states)):
+            if states[-(t+1)] not in states[:-(t+2)]:
+                returns[states[-(t+1)][0]-12, states[-(t+1)][1]-1, int(states[-(t+1)][2]), actions[-(t+1)]] += G
+                visits[states[-(t+1)][0]-12, states[-(t+1)][1]-1, int(states[-(t+1)][2]), actions[-(t+1)]] += 1
+                Q[states[-(t+1)][0]-12, states[-(t+1)][1]-1, int(states[-(t+1)][2]), actions[-(t+1)]] = returns[states[-(t+1)][0]-12, states[-(t+1)][1]-1, int(states[-(t+1)][2]), actions[-(t+1)]] / visits[states[-(t+1)][0]-12, states[-(t+1)][1]-1, int(states[-(t+1)][2]), actions[-(t+1)]]
+                pi[states[-(t+1)][0]-12, states[-(t+1)][1]-1, int(states[-(t+1)][2])] = int(np.argmax(Q[states[-(t+1)][0]-12, states[-(t+1)][1]-1, int(states[-(t+1)][2])]))
         
 
 
 def main():
-    single_run_20()
-    
-    # policy_evaluation() 
-    # call policy_evaluation function to evaluate the policy that sticks for >= 20
-    
+    #single_run_20()
+    policy_evaluation()
     # monte_carlo_es()
-    # call monte_carlo_es function to learn optimal policy
 
 
 if __name__ == "__main__":
