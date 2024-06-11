@@ -192,16 +192,16 @@ def plot_avg_ep_length(ep_length_arr, window=100):
     plt.title("Episode length over time (smoothed over window size {})".format(window))
 
 
-env = gym.make("FrozenLake-v0")
+# env = gym.make("FrozenLake-v0")
 # env = gym.make("FrozenLake-v0", is_slippery=False)
-# env=gym.make('FrozenLake-v0', map_name="8x8")
+env = gym.make("FrozenLake-v0", map_name="8x8")
 
 print("current environment: ")
 env.render()
 print()
 
 print("Running sarsa...")
-Q, ep_length_arr = sarsa(env, alpha=0.1, gamma=0.9, epsilon=0.5, num_ep=int(1e4))
+Q, ep_length_arr = sarsa(env, alpha=0.1, gamma=0.9, epsilon=0.5, num_ep=int(1e5 * 2))
 plot_avg_ep_length(ep_length_arr, window=100)
 plt.show()
 
@@ -212,7 +212,7 @@ print_policy(Q, env)
 plt.show()
 
 print("\nRunning qlearning")
-Q = qlearning(env, alpha=0.1, gamma=0.9, epsilon=0.5, num_ep=int(1e4))
+Q = qlearning(env, alpha=0.1, gamma=0.9, epsilon=0.5, num_ep=int(1e5 * 2))
 plot_V(Q, env)
 plot_Q(Q, env)
 print_policy(Q, env)
