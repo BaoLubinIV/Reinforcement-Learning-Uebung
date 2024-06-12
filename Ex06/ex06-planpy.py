@@ -27,6 +27,29 @@ def rollout(env, maxsteps=100):
     return G
 
 
+def mcs(env, root, maxiter=500):
+    """monte carlo search (plain code template)"""
+
+    # this is an example of how to add nodes to the root for all possible actions:
+    root.children = [Node(root, a) for a in range(env.action_space.n)]
+
+    for i in range(maxiter):
+        state = copy.deepcopy(env)
+        G = 0.0
+
+        node = random.choice(root.children)
+        _, reward, terminal, _ = state.step(node.action)
+        G += reward
+
+        # This performs a rollout (Simulation):
+        if not terminal:
+            G += rollout(state)
+
+        # This updates values for the current node:
+        node.visits += 1
+        node.sum_value += G
+
+
 def mcts(env, root, maxiter=500):
     """TODO: Use this function as a starting point for implementing Monte Carlo Tree Search"""
 
@@ -86,6 +109,7 @@ def main():
     env.seed(0)  # use seed to make results better comparable
     # run the algorithm 10 times:
     rewards = []
+    real_interactions_per_episode = []
     all_longest_path_lengths = []
 
     for i in range(10):
@@ -94,6 +118,7 @@ def main():
         root = Node()  # Initialize empty tree
         sum_reward = 0.0
         longest_path_length = []
+        interactions = 0
 
         while not terminal:
             env.render()
@@ -112,12 +137,28 @@ def main():
             root = bestchild  # use the best child as next root
             root.parent = None
             sum_reward += reward
+            interactions += 1
 
         rewards.append(sum_reward)
+        real_interactions_per_episode.append(interactions)
         all_longest_path_lengths.append(longest_path_length)
         print("finished run " + str(i + 1) + " with reward: " + str(sum_reward))
 
     print("mean reward: ", np.mean(rewards))
+    # compute mean reward per episode
+    mean_reward_per_episode = [
+        r / i for r, i in zip(rewards, real_interactions_per_episode)
+    ]
+    # Plot the mean reward per episode
+    plt.figure(figsize=(12, 6))
+    plt.plot(mean_reward_per_episode, label="Reward")
+    plt.xlabel("Episode")
+    plt.ylabel("Reward")
+    plt.title("Reward Over Episodes")
+    plt.legend()
+    plt.show()
+    # store img
+    plt.savefig("reward_over_episodes.png")
 
     # Plot the longest path lengths
     plt.figure(figsize=(12, 6))
@@ -128,6 +169,8 @@ def main():
     plt.title("Longest Path Length Over Iterations")
     plt.legend()
     plt.show()
+    # store img
+    plt.savefig("longest_path_length_over_iterations.png")
 
 
 if __name__ == "__main__":
