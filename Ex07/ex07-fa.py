@@ -2,7 +2,7 @@ import gym
 import numpy as np
 import matplotlib.pyplot as plt
 
-
+#functions to discretize the states
 def discretize_state(state, n_intervals):
     intervals = [
         np.linspace(-1.2, 0.6, n_intervals + 1),
@@ -15,12 +15,12 @@ def discretize_state(state, n_intervals):
 
 
 def Q_learning(env, alpha = 0.1, gamma = 0.9, epsilon = 0.1, n_episodes = 100, n_intervals = 20):
-    # 初始化Q表
+    # initialize Q table
     q_table = np.zeros((n_intervals, n_intervals, env.action_space.n))
     cumulative_successes = np.zeros(n_episodes)
     steps_per_episode = np.zeros(n_episodes)
     
-    # 训练Q-learning代理
+    # implement Q learning agent
     for episode in range(n_episodes):
         state = discretize_state(env.reset(), n_intervals)
         done = False
@@ -50,10 +50,10 @@ def Q_learning(env, alpha = 0.1, gamma = 0.9, epsilon = 0.1, n_episodes = 100, n
         
         
         if (episode+1) % 20 == 0:
-            # 计算当前价值函数
+            # calculate and observe current value function 
             value_function = np.max(q_table, axis=2)
 
-            # 绘制价值函数
+            # plot the value function
             plt.figure(figsize=(10, 6))
             plt.title('Value Function at episode'+ str(episode))
             plt.xlabel('Position')
@@ -65,8 +65,11 @@ def Q_learning(env, alpha = 0.1, gamma = 0.9, epsilon = 0.1, n_episodes = 100, n
             plt.show()
             
     return cumulative_successes, steps_per_episode
-            
+
+
+      
 def Q_learning_evaluation(env, repeats = 10, n_episodes = 1500):
+    '''function to implement Q learning for 10 times and observe learning curve'''
     
     all_successes = np.zeros((repeats, n_episodes))
     all_steps = np.zeros((repeats, n_episodes))
@@ -77,11 +80,11 @@ def Q_learning_evaluation(env, repeats = 10, n_episodes = 1500):
         all_successes[run,:] = cumulative_successes
         all_steps[run,:] = steps_per_episode
     
-    # 计算平均值
+    # calculate average over 10 runs
     avg_successes = np.mean(all_successes, axis=0)
     avg_steps = np.mean(all_steps, axis=0)
     
-    # 绘制平均成功次数的学习曲线
+    # plot learning curves
     plt.figure(figsize=(12, 5))
     
     plt.subplot(1, 2, 1)
